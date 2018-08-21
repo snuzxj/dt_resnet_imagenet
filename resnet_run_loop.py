@@ -431,7 +431,7 @@ def resnet_main(
         num_epochs=1)
   
   train_spec = tf.estimator.TrainSpec(input_fn=input_fn_train,
-      hooks=train_hooks)
+      hooks=train_hooks)
   eval_spec = tf.estimator.EvalSpec(input_fn=input_fn_eval,
       throttle_secs=1800,
       steps=None,

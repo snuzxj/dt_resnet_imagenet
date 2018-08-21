@@ -28,6 +28,7 @@ from absl import app as absl_app
 from absl import flags
 
 from utils import _base
+from utils import _benchmark
 from utils import _conventions
 from utils import _misc
 from utils import _performance
@@ -70,6 +71,8 @@ define_base = register_key_flags_in_core(_base.define_base)
 define_base_eager = register_key_flags_in_core(functools.partial(
     _base.define_base, epochs_between_evals=False, stop_threshold=False,
     hooks=False))
+define_benchmark = register_key_flags_in_core(_benchmark.define_benchmark)
+#define_device = register_key_flags_in_core(_device.define_device)
 define_image = register_key_flags_in_core(_misc.define_image)
 define_performance = register_key_flags_in_core(_performance.define_performance)
 
@@ -81,3 +84,4 @@ get_num_gpus = _base.get_num_gpus
 get_tf_dtype = _performance.get_tf_dtype
 get_loss_scale = _performance.get_loss_scale
 DTYPE_MAP = _performance.DTYPE_MAP
+require_cloud_storage = _device.require_cloud_storage

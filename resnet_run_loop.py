@@ -476,7 +476,7 @@ def define_resnet_flags(resnet_size_choices=None):
   flags_core.define_base()
   flags_core.define_performance(num_parallel_calls=False)
   flags_core.define_image()
-#  flags_core.define_benchmark()
+  flags_core.define_benchmark()
   flags.adopt_module_key_flags(flags_core)
 
   flags.DEFINE_enum(

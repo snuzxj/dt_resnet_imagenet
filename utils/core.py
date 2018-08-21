@@ -27,10 +27,10 @@ import sys
 from absl import app as absl_app
 from absl import flags
 
-import _base
-import _conventions
-import _misc
-import _performance
+from utils import _base
+from utils import _conventions
+from utils import _misc
+from utils import _performance
 
 
 def set_defaults(**kwargs):

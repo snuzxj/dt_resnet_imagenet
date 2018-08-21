@@ -20,7 +20,7 @@ from __future__ import print_function
 
 from absl import flags
 
-from _conventions import help_wrap
+from utils._conventions import help_wrap
 
 
 def define_image(data_format=True):

@@ -425,14 +425,14 @@ def resnet_main(
   def input_fn_train():
     return input_function(
         is_training=True, data_dir=flags_obj.data_dir,
-        batch_size=flags_obj.batch_size,,
+        batch_size=flags_obj.batch_size,
         num_epochs=flags_obj.train_epochs,
         num_gpus=run_config.num_worker_replicas)
 
   def input_fn_eval():
     return input_function(
         is_training=False, data_dir=flags_obj.data_dir,
-        batch_size=flags_obj.batch_size),
+        batch_size=flags_obj.batch_size,
         num_epochs=1)
   
   train_spec = tf.estimator.TrainSpec(input_fn=input_fn_train,

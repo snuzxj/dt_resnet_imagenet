@@ -137,8 +137,8 @@ def get_synth_input_fn(height, width, num_channels, num_classes):
 ################################################################################
 # Functions for running training/eval/validation loops for the model.
 ################################################################################
-def learning_rate_with_decay(
-    batch_size, batch_denom, num_images, boundary_epochs, decay_rates):
+def learning_rate_with_decay(batch_size, batch_denom, num_images, 
+                             boundary_epochs, decay_rates, num_workers=1):
   """Get a learning rate that decays step-wise as training progresses.
 
   Args:
@@ -158,7 +158,11 @@ def learning_rate_with_decay(
     trained so far (global_step)- and returns the learning rate to be used
     for training the next batch.
   """
-  initial_learning_rate = 0.1 * batch_size / batch_denom
+  # batch_size is per worker, total batch size determines the inital lr
+  initial_learning_rate = 0.1 * batch_size * num_workers / batch_denom
+  # global_step currently counts total steps of every worker.
+  # Since batches_per_epoch is global_step per epoch, it should be computed
+  # with batch_size per worker instead of total batch size
   batches_per_epoch = num_images / batch_size
 
   # Reduce the learning rate at certain epochs.
@@ -371,10 +375,12 @@ def resnet_main(
 #      flags_core.get_num_gpus(flags_obj), flags_obj.all_reduce_alg)
 
   run_config = tf.estimator.RunConfig(
-#      train_distribute=distribution_strategy, session_config=session_config
+#      train_distribute=distribution_strategy, 
+      session_config=session_config
       protocol="grpc+verbs",
       log_step_count_steps=1000)
-
+  
+  
   # initialize our model with all but the dense layer from pretrained resnet
   if flags_obj.pretrained_model_checkpoint_path is not None:
     warm_start_settings = tf.estimator.WarmStartSettings(
@@ -392,11 +398,12 @@ def resnet_main(
           'resnet_version': int(flags_obj.resnet_version),
           'loss_scale': flags_core.get_loss_scale(flags_obj),
           'dtype': flags_core.get_tf_dtype(flags_obj),
-          'fine_tune': flags_obj.fine_tune
+          'fine_tune': flags_obj.fine_tune,
+          'num_workers': run_config.num_worker_replicas
       })
 
   run_params = {
-      'batch_size': flags_obj.batch_size,
+      'batch_size': flags_obj.batch_size*run_config.num_worker_replicas,
       'dtype': flags_core.get_tf_dtype(flags_obj),
       'resnet_size': flags_obj.resnet_size,
       'resnet_version': flags_obj.resnet_version,
@@ -418,16 +425,14 @@ def resnet_main(
   def input_fn_train():
     return input_function(
         is_training=True, data_dir=flags_obj.data_dir,
-        batch_size=distribution_utils.per_device_batch_size(
-            flags_obj.batch_size, run_config.num_worker_replicas),
+        batch_size=flags_obj.batch_size,,
         num_epochs=flags_obj.train_epochs,
         num_gpus=run_config.num_worker_replicas)
 
   def input_fn_eval():
     return input_function(
         is_training=False, data_dir=flags_obj.data_dir,
-        batch_size=distribution_utils.per_device_batch_size(
-            flags_obj.batch_size, flags_core.get_num_gpus(flags_obj)),
+        batch_size=flags_obj.batch_size),
         num_epochs=1)
   
   train_spec = tf.estimator.TrainSpec(input_fn=input_fn_train,

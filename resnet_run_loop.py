@@ -376,7 +376,7 @@ def resnet_main(
 
   run_config = tf.estimator.RunConfig(
 #      train_distribute=distribution_strategy, 
-      session_config=session_config
+      session_config=session_config,
       protocol="grpc+verbs",
       log_step_count_steps=1000)
   

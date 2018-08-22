@@ -380,8 +380,10 @@ def resnet_main(
       protocol="grpc+verbs",
       log_step_count_steps=1000)
   
-  print("num_worker={}, batch_size={}".format(run_config.num_worker_replicas,
-          flags_obj.batch_size))
+  tf.logging.info("num_worker={}, batch_size={}, train_epochs={}".format(
+          run_config.num_worker_replicas,
+          flags_obj.batch_size,
+          flags_obj.train_epochs))
   # initialize our model with all but the dense layer from pretrained resnet
   if flags_obj.pretrained_model_checkpoint_path is not None:
     warm_start_settings = tf.estimator.WarmStartSettings(

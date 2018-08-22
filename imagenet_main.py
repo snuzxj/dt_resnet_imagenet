@@ -182,7 +182,7 @@ def input_fn(is_training, data_dir, batch_size, num_epochs=1, num_gpus=None):
   # but high enough to provide the benefits of parallelization. You may want
   # to increase this number if you have a large number of CPU cores.
   dataset = dataset.apply(tf.contrib.data.parallel_interleave(
-      tf.data.TFRecordDataset, cycle_length=32))
+      tf.data.TFRecordDataset, cycle_length=10))
 
   return resnet_run_loop.process_record_dataset(
       dataset=dataset,

@@ -159,7 +159,8 @@ def learning_rate_with_decay(batch_size, batch_denom, num_images,
     for training the next batch.
   """
   # batch_size is per worker, total batch size determines the inital lr
-  initial_learning_rate = 0.1 * batch_size * num_workers / batch_denom
+  #initial_learning_rate = 0.1 * batch_size * num_workers / batch_denom
+  initial_learning_rate = 0.1 * batch_size / batch_denom
   # global_step currently counts total steps of every worker.
   # Since batches_per_epoch is global_step per epoch, it should be computed
   # with batch_size per worker instead of total batch size
@@ -323,13 +324,17 @@ def resnet_model_fn(features, labels, mode, model_class,
   else:
     train_op = None
 
-  accuracy = tf.metrics.accuracy(labels, predictions['classes'])
+  accuracy1 = tf.metrics.accuracy(labels, predictions['classes'])
+  accurary5 = tf.metrics.mean(tf.nn.in_top_k(predictions=predictions, targets=labels, k=5))
 
-  metrics = {'accuracy': accuracy}
+
+  metrics = {'accuracy1': accuracy1, 'accuracy5': accuracy5}
 
   # Create a tensor named train_accuracy for logging purposes
-  tf.identity(accuracy[1], name='train_accuracy')
-  tf.summary.scalar('train_accuracy', accuracy[1])
+  tf.identity(accuracy1[1], name='train_accuracy1')
+  tf.summary.scalar('train_accuracy1', accuracy1[1])
+  tf.identity(accuracy5[1], name='train_accuracy5')
+  tf.summary.scalar('train_accuracy5', accuracy1[1])
 
   return tf.estimator.EstimatorSpec(
       mode=mode,
@@ -444,7 +449,13 @@ def resnet_main(
       throttle_secs=1800,
       steps=None,
       start_delay_secs=10)
-  tf.estimator.train_and_evaluate(classifier, train_spec, eval_spec)
+  if not flags_obj.eval:
+    tf.estimator.train_and_evaluate(classifier, train_spec, eval_spec)
+  else:
+   eval_results = classifier.evaluate(input_fn=input_fn_eval,
+                                       steps=5000//flags_obj.batch_size)
+   benchmark_logger.log_evaluation_result(eval_results)
+    
   '''
   total_training_cycle = (flags_obj.train_epochs //
                           flags_obj.epochs_between_evals)
@@ -501,6 +512,10 @@ def define_resnet_flags(resnet_size_choices=None):
       help=flags_core.help_wrap(
           'If not None initialize all the network except the final layer with '
           'these values'))
+  flags.DEFINE_bool(
+      name='eval', short_name='ev', default=False,
+      help=flags_core.help_wrap(
+          '.'))
 
   choice_kwargs = dict(
       name='resnet_size', short_name='rs', default='50',

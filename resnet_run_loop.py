@@ -24,7 +24,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-
+import time
 # pylint: disable=g-bad-import-order
 from absl import flags
 import tensorflow as tf
@@ -328,14 +328,14 @@ def resnet_model_fn(features, labels, mode, model_class,
   accuracy5 = tf.metrics.mean(tf.nn.in_top_k(predictions=predictions['probabilities'], targets=tf.squeeze(labels), k=5))
 
 
-  metrics = {'accuracy': accuracy}
+  metrics = {'accuracy': accuracy, 'accuracy5': accuracy5}
 
   # Create a tensor named train_accuracy for logging purposes
-  tf.identity(accuracy[1], name='train_accuracy')
-  tf.summary.scalar('train_accuracy', accuracy[1])
+  tf.identity(accuracy[1], name='accuracy')
+  tf.summary.scalar('accuracy', accuracy[1])
   
-  tf.identity(accuracy5[1], name='train_accuracy5')
-  tf.summary.scalar('train_accuracy5', accuracy5[1])
+  tf.identity(accuracy5[1], name='accuracy5')
+  tf.summary.scalar('accuracy5', accuracy5[1])
 
   return tf.estimator.EstimatorSpec(
       mode=mode,
@@ -450,13 +450,14 @@ def resnet_main(
       throttle_secs=1800,
       steps=None,
       start_delay_secs=10)
-  if not flags_obj.eval:
+  if not flags_obj.eval==0:
     tf.estimator.train_and_evaluate(classifier, train_spec, eval_spec)
   else:
-   eval_results = classifier.evaluate(input_fn=input_fn_eval,
-                                       steps=5000//flags_obj.batch_size)
-   benchmark_logger.log_evaluation_result(eval_results)
-    
+    while True:
+      eval_results = classifier.evaluate(input_fn=input_fn_eval,
+                                       steps=50000//flags_obj.batch_size)
+      time.sleep(flags_obj.eval)
+       
   '''
   total_training_cycle = (flags_obj.train_epochs //
                           flags_obj.epochs_between_evals)
@@ -513,10 +514,10 @@ def define_resnet_flags(resnet_size_choices=None):
       help=flags_core.help_wrap(
           'If not None initialize all the network except the final layer with '
           'these values'))
-  flags.DEFINE_bool(
-      name='eval', short_name='ev', default=False,
+  flags.DEFINE_integer(
+      name='eval', short_name='ev', default=0,
       help=flags_core.help_wrap(
-          '.'))
+          'Evaluation iterval in sec.'))
 
   choice_kwargs = dict(
       name='resnet_size', short_name='rs', default='50',

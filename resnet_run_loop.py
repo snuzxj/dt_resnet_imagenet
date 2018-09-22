@@ -324,15 +324,16 @@ def resnet_model_fn(features, labels, mode, model_class,
   else:
     train_op = None
 
-  accuracy1 = tf.metrics.accuracy(labels, predictions['classes'])
-  accurary5 = tf.metrics.mean(tf.nn.in_top_k(predictions=predictions, targets=labels, k=5))
+  accuracy = tf.metrics.accuracy(labels, predictions['classes'])
+  accurary5 = tf.metrics.mean(tf.nn.in_top_k(predictions=predictions['classes'], targets=labels, k=5))
 
 
-  metrics = {'accuracy1': accuracy1, 'accuracy5': accuracy5}
+  metrics = {'accuracy': accuracy}
 
   # Create a tensor named train_accuracy for logging purposes
-  tf.identity(accuracy1[1], name='train_accuracy1')
-  tf.summary.scalar('train_accuracy1', accuracy1[1])
+  tf.identity(accuracy[1], name='train_accuracy')
+  tf.summary.scalar('train_accuracy', accuracy[1])
+  
   tf.identity(accuracy5[1], name='train_accuracy5')
   tf.summary.scalar('train_accuracy5', accuracy1[1])
 

@@ -450,7 +450,7 @@ def resnet_main(
       throttle_secs=1800,
       steps=None,
       start_delay_secs=10)
-  if not flags_obj.eval==0:
+  if flags_obj.eval==0:
     tf.estimator.train_and_evaluate(classifier, train_spec, eval_spec)
   else:
     while True:

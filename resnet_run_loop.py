@@ -480,12 +480,12 @@ def resnet_main(
       model_dir=flags_obj.model_dir,
       batch_size=flags_obj.batch_size)
 
-  def input_fn_train(num_epochs):
+  def input_fn_train():
     return input_function(
         is_training=True, data_dir=flags_obj.data_dir,
         batch_size=distribution_utils.per_device_batch_size(
             flags_obj.batch_size, flags_core.get_num_gpus(flags_obj)),
-        num_epochs=num_epochs,
+        num_epochs=flags_obj.train_epochs,
         num_gpus=flags_core.get_num_gpus(flags_obj),
         dtype=flags_core.get_tf_dtype(flags_obj))
 

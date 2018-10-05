@@ -426,8 +426,7 @@ def resnet_main(
       intra_op_parallelism_threads=flags_obj.intra_op_parallelism_threads,
       allow_soft_placement=True)
 
-  distribution_strategy = distribution_utils.get_distribution_strategy(
-      flags_core.get_num_gpus(flags_obj), flags_obj.all_reduce_alg)
+  distribution_strategy = tf.contrib.distribute.MirroredStrategy(num_gpus=num_gpus)
 
   run_config = tf.estimator.RunConfig(
       train_distribute=distribution_strategy, 

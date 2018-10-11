@@ -426,8 +426,18 @@ def resnet_main(
       intra_op_parallelism_threads=flags_obj.intra_op_parallelism_threads,
       allow_soft_placement=True)
 
-  distribution_strategy = tf.contrib.distribute.MirroredStrategy(
-          num_gpus=flags_core.get_num_gpus(flags_obj))
+  distribution_strategy = None
+  if flags_obj.distribution_strategy == 'ps':
+    distribution_strategy = tf.contrib.distribute.ParameterServerStrategy(
+          num_gpus_per_worker=flags_core.get_num_gpus(flags_obj))
+  elif flags_obj.distribution_strategy == 'allreduce':
+    distribution_strategy = tf.contrib.distribute.CollectiveAllReduceStrategy(
+          num_gpus_per_worker=flags_core.get_num_gpus(flags_obj))
+  elif flags_obj.distribution_strategy == 'mirror':
+    distribution_strategy = tf.contrib.distribute.MirroredStrategy(
+          num_gpus_per_worker=flags_core.get_num_gpus(flags_obj))
+  else:
+    print("Distribution Strategy {} is not valid".format(flags_obj.distribution_strategy))
 
   run_config = tf.estimator.RunConfig(
       train_distribute=distribution_strategy, 
@@ -598,6 +608,11 @@ def define_resnet_flags(resnet_size_choices=None):
           'the expense of image resize/cropping being done as part of model '
           'inference. Note, this flag only applies to ImageNet and cannot '
           'be used for CIFAR.'))
+  flags.DEFINE_string(
+      name='distribution_strategy', short_name='ds', default=None,
+      help=flags_core.help_wrap(
+          'Distribution strategies: ps(ParameterServerStrategy), allreduce'
+          '(CollectiveAllReduceStrategy), mirror(MirroredStrategy)'))
 
   choice_kwargs = dict(
       name='resnet_size', short_name='rs', default='50',

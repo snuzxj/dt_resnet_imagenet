@@ -428,12 +428,15 @@ def resnet_main(
 
   distribution_strategy = None
   if flags_obj.distribution_strategy == 'ps':
+    print('Using ParameterServerStrategy')
     distribution_strategy = tf.contrib.distribute.ParameterServerStrategy(
           num_gpus_per_worker=flags_core.get_num_gpus(flags_obj))
   elif flags_obj.distribution_strategy == 'allreduce':
+    print('Using CollectiveAllReduceStrategy')
     distribution_strategy = tf.contrib.distribute.CollectiveAllReduceStrategy(
           num_gpus_per_worker=flags_core.get_num_gpus(flags_obj))
   elif flags_obj.distribution_strategy == 'mirror':
+    print('Using MirroredStrategy')
     distribution_strategy = tf.contrib.distribute.MirroredStrategy(
           num_gpus_per_worker=flags_core.get_num_gpus(flags_obj))
   else:
